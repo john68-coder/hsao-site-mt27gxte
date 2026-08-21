@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>HSAO</title>
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="apple-touch-icon" href="icon.png" />
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ffffff">
+    <link rel="apple-touch-icon" href="icon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>builder</title>
+    <script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>APP HSAO </title>
+<style>
+  :root{
+    --bg:#121317; --surface:#1a1c22; --surface-alt:#20232b;
+    --border:#2b2f3a; --border-light:#383d4a;
+    --text:#eceef2; --muted:#8b93a1; --faint:#5b6270;
+    --amber:#ffb454; --teal:#5ec9c0; --danger:#e5686c; --danger-dim:#3a2226;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--text); min-height:100vh;
+    font-family:system-ui,-apple-system,sans-serif;
+  }
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+  ::selection{background:var(--amber);color:#1a1305;}
+  input::placeholder,textarea::placeholder{color:var(--faint);}
+  button{font-family:inherit;}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--teal);outline-offset:2px;}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important;}}
+
+  .icon{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;flex-shrink:0;}
+
+  .topbar{position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--border);}
+  .topbar-inner{max-width:720px;margin:0 auto;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;}
+  .topbar-left{display:flex;align-items:center;gap:10px;}
+  .dots{display:flex;gap:6px;}
+  .dot{width:8px;height:8px;border-radius:999px;opacity:.85;}
+  .title{font-size:15px;font-weight:700;letter-spacing:-.01em;}
+  .icon-btn{background:none;border:none;color:var(--muted);cursor:pointer;display:flex;padding:2px;}
+  .icon-btn .icon{width:14px;height:14px;}
+
+  .container{max-width:720px;margin:0 auto;padding:20px 16px 90px;}
+
+  .btn{display:inline-flex;align-items:center;gap:8px;justify-content:center;padding:10px 16px;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;border:1px solid transparent;}
+  .btn:disabled{opacity:.5;cursor:default;}
+  .btn-solid{background:var(--amber);color:#1a1305;}
+  .btn-outline{background:transparent;color:var(--text);border:1px solid var(--border-light);}
+  .btn-ghost{background:transparent;color:var(--muted);}
+  .btn-danger{background:var(--danger-dim);color:var(--danger);border:1px solid var(--danger-dim);}
+
+  .eyebrow{font-size:11px;letter-spacing:.14em;color:var(--faint);text-transform:uppercase;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;}
+
+  .empty{text-align:center;padding:60px 20px;border:1px dashed var(--border);border-radius:12px;}
+  .empty .icon{width:28px;height:28px;color:var(--faint);margin-bottom:12px;}
+
+  .spinner-wrap{display:flex;justify-content:center;padding:60px 0;color:var(--faint);}
+  .spinner{width:22px;height:22px;border:2px solid var(--border-light);border-top-color:var(--teal);border-radius:50%;animation:spin 0.8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .grid{margin-top:12px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+  .card-cover{aspect-ratio:1;background-color:var(--surface-alt);background-size:cover;background-position:center;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+  .card-cover .icon{width:22px;height:22px;color:var(--faint);}
+  .card-body{padding:8px 10px;}
+  .card-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .card-actions{display:flex;justify-content:space-between;align-items:center;margin-top:6px;}
+  .confirm-inline{display:flex;gap:6px;}
+  .confirm-inline button{background:none;border:none;cursor:pointer;font-size:11px;font-family:ui-monospace,monospace;}
+
+  label.field-label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px;}
+  .text-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;color:var(--text);font-size:15px;}
+  .field{margin-top:18px;}
+  .field:first-child{margin-top:14px;}
+
+  .cover-row{display:flex;gap:14px;align-items:center;}
+  .cover-preview{width:76px;height:76px;border-radius:12px;background-color:var(--surface);background-size:cover;background-position:center;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;}
+  .cover-preview .icon{width:20px;height:20px;color:var(--faint);}
+  .cover-hint{font-size:12px;color:var(--faint);margin-top:6px;}
+
+  .dropzone{border:1px dashed var(--border);border-radius:10px;padding:16px;display:flex;align-items:center;gap:12px;cursor:pointer;background:var(--surface);}
+  .dropzone.has-file{border-color:var(--teal);}
+  .dropzone .icon{width:22px;height:22px;color:var(--faint);}
+  .dropzone.has-file .icon{color:var(--teal);}
+  .dz-name{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .dz-size{font-size:12px;color:var(--faint);font-family:ui-monospace,monospace;}
+
+  .error-line{margin-top:14px;display:flex;gap:8px;align-items:center;color:var(--danger);font-size:13px;}
+  .error-line .icon{width:16px;height:16px;color:var(--danger);}
+
+  .actions-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+
+  .phone{margin:0 auto;width:100%;max-width:340px;aspect-ratio:9/19;background:#000;border-radius:32px;border:8px solid var(--surface-alt);box-shadow:0 20px 50px rgba(0,0,0,.5);overflow:hidden;position:relative;}
+  .phone-notch{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:60px;height:16px;background:#000;border-radius:10px;z-index:2;}
+  .phone iframe{width:100%;height:100%;border:none;background:#fff;}
+  .phone-caption{text-align:center;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--faint);font-size:12px;font-family:ui-monospace,monospace;}
+  .phone-caption .icon{width:13px;height:13px;}
+
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--surface-alt);border:1px solid var(--border-light);color:var(--text);padding:10px 16px;border-radius:8px;font-size:13px;display:flex;align-items:center;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,.4);}
+  .toast .icon{width:14px;height:14px;color:var(--teal);}
+
+  .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--border);gap:12px;}
+  .toggle-row:last-child{border-bottom:none;}
+  .toggle-label{font-size:14px;}
+  .toggle-sub{font-size:12px;color:var(--faint);margin-top:2px;}
+  .switch{position:relative;width:44px;height:26px;flex-shrink:0;display:inline-block;}
+  .switch input{opacity:0;width:100%;height:100%;position:absolute;margin:0;cursor:pointer;z-index:1;}
+  .switch-track{position:absolute;inset:0;background:var(--border-light);border-radius:999px;transition:background .15s;}
+  .switch input:checked ~ .switch-track{background:var(--teal);}
+  .switch-thumb{position:absolute;top:3px;left:3px;width:20px;height:20px;background:#fff;border-radius:50%;transition:transform .15s;pointer-events:none;}
+  .switch input:checked ~ .switch-thumb{transform:translateX(18px);}
+
+  .color-row{display:flex;align-items:center;gap:12px;}
+  .color-input{width:48px;height:38px;border-radius:8px;border:1px solid var(--border);background:var(--surface);padding:2px;cursor:pointer;}
+
+  .asset-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .asset-chip{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--border);border-radius:999px;padding:6px 10px 6px 12px;font-size:12px;}
+  .asset-chip .chip-remove{background:none;border:none;color:var(--faint);cursor:pointer;display:flex;padding:2px;}
+
+  .info-note{font-size:12px;color:var(--faint);line-height:1.6;margin-top:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;}
+  .info-note b{color:var(--muted);}
+  .log-line{color:var(--muted);}
+  .log-line:last-child{color:var(--text);}
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* =========================================================
+   App HSAO — empacota qualquer index.html num "projeto"
+   com nome, capa e ficheiro, e exporta um pacote PWA pronto.
+
+   Persistencia: usa window.storage (armazenamento do Claude.ai).
+   Isto funciona enquanto abres esta pagina dentro do Claude.
+   Se fores alojar este ficheiro fora do Claude (site proprio,
+   ou dentro de um WebView Android), window.storage nao existe
+   la fora — pede-me nessa altura que troque para localStorage,
+   que e o que os teus outros apps (ex.: Nexotizzy AI) ja usam.
+   ========================================================= */
+
+function boot() {
+
+  // ---------- state ----------
+  var state = {
+    view: 'home',          // home | form | preview | building | github-setup
+    index: [],
+    loadingIndex: true,
+    active: null,           // {id,name,cover,html,fileName}
+    editingId: null,
+    busy: false,
+    error: '',
+    toast: '',
+    confirmDeleteId: null,  // used on home grid + preview
+    githubToken: '',
+    buildLog: [],
+    buildStatus: '',        // '' | running | success | error
+    buildError: '',
+    repoUrl: '',
+  };
+  var toastTimer = null;
+
+  // ---------- icons ----------
+  var ICONS = {
+    plus:      'M12 5v14M5 12h14',
+    trash:     'M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14',
+    pencil:    'M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4 12.5-12.5z',
+    download:  'M12 3v12m0 0l-4-4m4 4l4-4M4 21h16',
+    arrowLeft: 'M19 12H5m0 0l6-6m-6 6l6 6',
+    image:     'M21 15l-5-5L5 21',
+    upload:    'M12 3v12M8 7l4-4 4 4M4 21h16',
+    folder:    'M3 7l1 12h16l1-9H5M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2',
+    smartphone:'M11 18h2',
+    check:     'M20 6L9 17l-5-5',
+    x:         'M18 6L6 18M6 6l12 12',
+    alert:     'M12 9v4M12 17h.01M10.3 3.8L2.8 17a2 2 0 001.7 3h15a2 2 0 001.7-3L13.7 3.8a2 2 0 00-3.4 0z',
+  };
+  function icon(name, extraAttrs) {
+    var d = ICONS[name] || '';
+    var extraRect = name === 'image' ? '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/>' : '';
+    var extraRect2 = name === 'smartphone' ? '<rect x="6" y="2" width="12" height="20" rx="2"/>' : '';
+    return '<svg class="icon" ' + (extraAttrs||'') + ' viewBox="0 0 24 24">' + extraRect + extraRect2 + '<path d="' + d + '"/></svg>';
+  }
+
+  // ---------- storage helpers (safe: falls back to in-memory if window.storage
+  //            isn't ready/available, so the UI never fails to render) ----------
+  var memoryStore = {};
+  function hasStorage() {
+    return typeof window !== 'undefined' && window.storage && typeof window.storage.get === 'function';
+  }
+  function storageGet(key) {
+    if (hasStorage()) {
+      return window.storage.get(key, false).catch(function () { return null; });
+    }
+    return Promise.resolve(memoryStore.hasOwnProperty(key) ? { value: memoryStore[key] } : null);
+  }
+  function storageSet(key, value) {
+    if (hasStorage()) {
+      return window.storage.set(key, value, false);
+    }
+    memoryStore[key] = value;
+    return Promise.resolve({ key: key, value: value });
+  }
+  function storageDelete(key) {
+    if (hasStorage()) {
+      return window.storage.delete(key, false).catch(function () {});
+    }
+    delete memoryStore[key];
+    return Promise.resolve();
+  }
+  function loadIndex() {
+    return storageGet('apps-index')
+      .then(function (res) { return res ? JSON.parse(res.value) : []; })
+      .catch(function () { return []; });
+  }
+  function saveIndex(list) {
+    return storageSet('apps-index', JSON.stringify(list));
+  }
+  function saveApp(id, data) {
+    return storageSet('app:' + id, JSON.stringify(data));
+  }
+  function loadApp(id) {
+    return storageGet('app:' + id)
+      .then(function (res) { return res ? JSON.parse(res.value) : null; })
+      .catch(function () { return null; });
+  }
+  function removeApp(id) {
+    return storageDelete('app:' + id);
+  }
+
+  // ---------- JSZip loader (for real .zip export) ----------
+  var jszipPromise = null;
+  function loadJSZip() {
+    if (window.JSZip) return Promise.resolve(window.JSZip);
+    if (jszipPromise) return jszipPromise;
+    jszipPromise = new Promise(function (resolve, reject) {
+      var s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+      s.onload = function () { window.JSZip ? resolve(window.JSZip) : reject(new Error('JSZip indisponivel')); };
+      s.onerror = function () { reject(new Error('Sem ligacao para carregar o empacotador .zip')); };
+      document.head.appendChild(s);
+    });
+    return jszipPromise;
+  }
+
+  // ---------- file helpers ----------
+  function readFileAsText(file) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader();
+      r.onload = function (e) { resolve(e.target.result); };
+      r.onerror = reject;
+      r.readAsText(file);
+    });
+  }
+  function readFileAsDataUrl(file) {
+    return new Promise(function (resolve, reject) {
+      var r = new FileReader();
+      r.onload = function (e) { resolve(e.target.result); };
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+  }
+  function resizeImageToDataUrl(file, maxDim, quality) {
+    maxDim = maxDim || 512; quality = quality || 0.85;
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        var img = new Image();
+        img.onload = function () {
+          var width = img.width, height = img.height;
+          if (width > height) { if (width > maxDim) { height = Math.round(height * (maxDim / width)); width = maxDim; } }
+          else { if (height > maxDim) { width = Math.round(width * (maxDim / height)); height = maxDim; } }
+          var canvas = document.createElement('canvas');
+          canvas.width = width; canvas.height = height;
+          var ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#20232b';
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+  function downloadText(filename, content, mime) {
+    var blob = new Blob([content], { type: mime || 'text/plain' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  function downloadDataUrl(dataUrl, filename) {
+    return fetch(dataUrl).then(function (res) { return res.blob(); }).then(function (blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  }
+  function bytesLabel(str) {
+    var kb = new Blob([str || '']).size / 1024;
+    return kb < 1024 ? kb.toFixed(0) + ' KB' : (kb / 1024).toFixed(1) + ' MB';
+  }
+  function escapeHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function buildExportHtml(rawHtml, appName, opts) {
+    opts = opts || {};
+    var themeColor = opts.themeColor || '#121317';
+    var tags = [
+      '<link rel="manifest" href="manifest.json">',
+      '<meta name="theme-color" content="' + themeColor + '">',
+      '<link rel="apple-touch-icon" href="icon.png">',
+      '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">',
+      '<title>' + appName + '</title>',
+    ];
+    if (opts.offline) {
+      tags.push('<script>if("serviceWorker" in navigator){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){});});}<\/script>');
+    }
+    var tagsStr = tags.join('\n    ');
+    if (/<head[^>]*>/i.test(rawHtml)) {
+      return rawHtml.replace(/<head[^>]*>/i, function (m) { return m + '\n    ' + tagsStr; });
+    }
+    if (/<html[^>]*>/i.test(rawHtml)) {
+      return rawHtml.replace(/<html[^>]*>/i, function (m) { return m + '\n  <head>\n    ' + tagsStr + '\n  </head>'; });
+    }
+    return '<!DOCTYPE html>\n<html>\n  <head>\n    ' + tagsStr + '\n  </head>\n  <body>\n' + rawHtml + '\n  </body>\n</html>';
+  }
+  function generateServiceWorker(fileNames) {
+    var list = ['./', 'index.html', 'manifest.json', 'icon.png'].concat(fileNames || []);
+    var listJson = JSON.stringify(list);
+    return '// Gerado pelo App Builder — cache simples para funcionar offline\n' +
+      'var CACHE = "app-builder-cache-v1";\n' +
+      'var FILES = ' + listJson + ';\n' +
+      'self.addEventListener("install", function (e) {\n' +
+      '  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES); }).catch(function(){}));\n' +
+      '  self.skipWaiting();\n' +
+      '});\n' +
+      'self.addEventListener("activate", function (e) { self.clients.claim(); });\n' +
+      'self.addEventListener("fetch", function (e) {\n' +
+      '  e.respondWith(\n' +
+      '    caches.match(e.request).then(function (hit) {\n' +
+      '      return hit || fetch(e.request).then(function (res) {\n' +
+      '        var copy = res.clone();\n' +
+      '        caches.open(CACHE).then(function (c) { c.put(e.request, copy); });\n' +
+      '        return res;\n' +
+      '      }).catch(function () { return hit; });\n' +
+      '    })\n' +
+      '  );\n' +
+      '});\n';
+  }
+  function readmeText(appName) {
+    return appName + ' \u2014 pacote exportado\n=====================================\n\n' +
+      'Este pacote contem:\n  - index.html   (o teu app, com manifest ligado)\n' +
+      '  - manifest.json (nome, icone, modo standalone)\n  - icon.png     (a foto de capa que escolheste)\n\n' +
+      'Isto NAO e um .apk \u2014 e um pacote web pronto (PWA) que qualquer\n' +
+      'ferramenta de empacotamento consegue transformar num app instalavel.\n' +
+      'Compilar um .apk real exige um SDK Android, algo que nao corre\n' +
+      'dentro do navegador. Passos sugeridos a partir daqui:\n\n' +
+      '  1) PWABuilder.com \u2014 carrega estes 3 ficheiros (ou o link do teu\n' +
+      '     site, se o hospedares) e gera um .apk/.aab pronto para a Play\n' +
+      '     Store, gratuito.\n' +
+      '  2) Median.co ou Appilix \u2014 servicos que embrulham um site/HTML\n' +
+      '     num WebView Android, parecido ao que ja fazes manualmente.\n' +
+      '  3) Android Studio \u2014 usa o teu template WebView habitual e troca\n' +
+      '     o index.html pelo deste pacote.\n\n' +
+      'Gerado pela tua ferramenta App Builder.\n';
+  }
+
+  function readmeTextZip(app, opts) {
+    var lines = [app.name + ' \u2014 pacote exportado (.zip)', '====================================='];
+    lines.push('');
+    lines.push('Dentro deste zip:');
+    lines.push('  - index.html    (o teu app, com manifest ligado)');
+    lines.push('  - manifest.json (nome, icone, cor da barra, modo)');
+    if (app.cover) lines.push('  - icon.png      (a foto de capa que escolheste)');
+    (app.assets || []).forEach(function (a) { lines.push('  - ' + a.name + (a.isBinary ? '' : '')); });
+    if (opts.offline) lines.push('  - sw.js         (cache offline dos ficheiros acima)');
+    lines.push('');
+    lines.push('Isto NAO e um .apk ou .ipa \u2014 e o pacote web completo (PWA) que');
+    lines.push('qualquer ferramenta de empacotamento aceita para gerar o instalavel.');
+    lines.push('Compilar um .apk (Android) ou .ipa (iPhone) exige um SDK/Xcode');
+    lines.push('proprio, que nao corre dentro do navegador. Passos a partir daqui:');
+    lines.push('');
+    lines.push('  1) PWABuilder.com \u2014 carrega este zip (ou o link do teu site,');
+    lines.push('     se o hospedares) e gera .apk/.aab para Android, e .ipa para');
+    lines.push('     iPhone, gratuito.');
+    lines.push('  2) Median.co ou Appilix \u2014 embrulham o zip/site num WebView.');
+    lines.push('  3) Android Studio / Xcode \u2014 usa o teu template WebView e troca');
+    lines.push('     os ficheiros pelos deste pacote.');
+    lines.push('');
+    lines.push('Gerado pela tua ferramenta App Builder.');
+    return lines.join('\n');
+  }
+  function showToast(msg) {
+    state.toast = msg;
+    render();
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { state.toast = ''; render(); }, 2400);
+  }
+
+  // ---------- actions ----------
+  function openNew() {
+    state.active = { id: null, name: '', cover: '', html: '', fileName: '', assets: [], themeColor: '#121317', fullscreen: true, offline: true, notifications: false };
+    state.editingId = null;
+    state.error = '';
+    state.view = 'form';
+    render();
+  }
+  function openEdit(id) {
+    state.busy = true; render();
+    loadApp(id).then(function (full) {
+      state.busy = false;
+      if (!full) { state.error = 'Nao foi possivel carregar este projeto.'; render(); return; }
+      state.active = Object.assign({ id: id, assets: [], themeColor: '#121317', fullscreen: true, offline: true, notifications: false }, full);
+      state.editingId = id;
+      state.error = '';
+      state.view = 'form';
+      render();
+    });
+  }
+  function openPreview(id) {
+    state.busy = true; render();
+    loadApp(id).then(function (full) {
+      state.busy = false;
+      if (!full) { state.error = 'Nao foi possivel carregar este projeto.'; render(); return; }
+      state.active = Object.assign({ id: id, assets: [], themeColor: '#121317', fullscreen: true, offline: true, notifications: false }, full);
+      state.view = 'preview';
+      render();
+    });
+  }
+  function handleCoverPick(file) {
+    if (!file) return;
+    resizeImageToDataUrl(file).then(function (dataUrl) {
+      state.active.cover = dataUrl;
+      render();
+    }).catch(function () { state.error = 'Nao foi possivel ler essa imagem.'; render(); });
+  }
+  function handleHtmlPick(file) {
+    if (!file) return;
+    readFileAsText(file).then(function (text) {
+      state.active.html = text;
+      state.active.fileName = file.name;
+      render();
+    }).catch(function () { state.error = 'Nao foi possivel ler esse ficheiro.'; render(); });
+  }
+  function handleAssetPick(fileList) {
+    var files = Array.prototype.slice.call(fileList || []);
+    if (!files.length) return;
+    var imageExt = /\.(png|jpe?g|gif|webp|svg|ico)$/i;
+    Promise.all(files.map(function (file) {
+      var isBinary = imageExt.test(file.name) || (file.type || '').indexOf('image/') === 0;
+      var reader = isBinary ? readFileAsDataUrl(file) : readFileAsText(file);
+      return reader.then(function (content) { return { name: file.name, isBinary: isBinary, content: content }; });
+    })).then(function (newAssets) {
+      var assets = (state.active.assets || []).filter(function (a) {
+        return !newAssets.some(function (n) { return n.name === a.name; });
+      });
+      state.active.assets = assets.concat(newAssets);
+      render();
+    }).catch(function () { state.error = 'Nao foi possivel ler um dos ficheiros extra.'; render(); });
+  }
+  function removeAsset(name) {
+    state.active.assets = (state.active.assets || []).filter(function (a) { return a.name !== name; });
+    render();
+  }
+  function handleSave() {
+    if (!state.active.name.trim()) { state.error = 'Da um nome ao app.'; render(); return; }
+    if (!state.active.html) { state.error = 'Escolhe o ficheiro index.html do app.'; render(); return; }
+    state.busy = true; state.error = ''; render();
+    var id = state.editingId || (Date.now() + '-' + Math.random().toString(36).slice(2, 8));
+    var payload = {
+      name: state.active.name.trim(),
+      cover: state.active.cover || '',
+      html: state.active.html,
+      fileName: state.active.fileName || 'index.html',
+      assets: state.active.assets || [],
+      themeColor: state.active.themeColor || '#121317',
+      fullscreen: state.active.fullscreen !== false,
+      offline: state.active.offline !== false,
+      notifications: state.active.notifications === true,
+      updatedAt: Date.now(),
+    };
+    saveApp(id, payload).then(function () {
+      var withoutThis = state.index.filter(function (p) { return p.id !== id; });
+      var newIndex = [{ id: id, name: payload.name, cover: payload.cover, updatedAt: payload.updatedAt }].concat(withoutThis);
+      newIndex.sort(function (a, b) { return b.updatedAt - a.updatedAt; });
+      return saveIndex(newIndex).then(function () {
+        state.index = newIndex;
+        state.busy = false;
+        state.view = 'home';
+        render();
+        showToast(state.editingId ? 'Alteracoes guardadas.' : 'App criado.');
+      });
+    }).catch(function () {
+      state.busy = false;
+      state.error = 'Falha ao guardar. O ficheiro pode ser demasiado grande.';
+      render();
+    });
+  }
+  function handleDelete(id) {
+    state.busy = true; render();
+    removeApp(id).then(function () {
+      var newIndex = state.index.filter(function (p) { return p.id !== id; });
+      return saveIndex(newIndex).then(function () {
+        state.index = newIndex;
+        state.busy = false;
+        state.confirmDeleteId = null;
+        if (state.view !== 'home') state.view = 'home';
+        render();
+        showToast('App apagado.');
+      });
+    });
+  }
+  function handleExport(app) {
+    state.busy = true; render();
+    try {
+      var html = buildExportHtml(app.html, app.name);
+      downloadText('index.html', html, 'text/html');
+      var manifest = {
+        name: app.name, short_name: app.name.slice(0, 12), start_url: './index.html',
+        display: 'standalone', background_color: '#121317', theme_color: '#121317',
+        icons: app.cover ? [{ src: 'icon.png', sizes: '512x512', type: 'image/png' }] : [],
+      };
+      downloadText('manifest.json', JSON.stringify(manifest, null, 2), 'application/json');
+      var afterIcon = app.cover ? downloadDataUrl(app.cover, 'icon.png') : Promise.resolve();
+      afterIcon.then(function () {
+        downloadText('LEIA-ME.txt', readmeText(app.name));
+        state.busy = false;
+        render();
+        showToast('Pacote exportado.');
+      });
+    } catch (e) {
+      state.busy = false;
+      state.error = 'Falha ao exportar o pacote.';
+      render();
+    }
+  }
+
+  // ---------- GitHub automation: cria repo, sobe o projeto, espera o build, baixa o .apk ----------
+  function wait(ms) { return new Promise(function (resolve) { setTimeout(resolve, ms); }); }
+  function utf8ToBase64(str) { return btoa(unescape(encodeURIComponent(str || ''))); }
+
+  function ghHeaders(token) {
+    return { 'Authorization': 'token ' + token, 'Accept': 'application/vnd.github+json' };
+  }
+  function ghFetch(url, token, opts) {
+    opts = opts || {};
+    var headers = Object.assign({}, ghHeaders(token), opts.headers || {});
+    if (opts.body) headers['Content-Type'] = 'application/json';
+    return fetch(url, { method: opts.method || 'GET', headers: headers, body: opts.body }).then(function (res) {
+      if (!res.ok) {
+        return res.json().catch(function () { return {}; }).then(function (body) {
+          throw new Error((body && body.message) || ('Erro do GitHub (' + res.status + ')'));
+        });
+      }
+      return res.json();
+    });
+  }
+  function ghCreateRepo(token, name, attempt) {
+    attempt = attempt || 0;
+    return ghFetch('https://api.github.com/user/repos', token, {
+      method: 'POST',
+      body: JSON.stringify({ name: name, private: true, auto_init: true, description: 'Gerado pelo App Builder' }),
+    }).catch(function (err) {
+      if (attempt < 3 && /already exists/i.test(err.message || '')) {
+        return ghCreateRepo(token, name + '-' + Math.random().toString(36).slice(2, 6), attempt + 1);
+      }
+      throw err;
+    });
+  }
+  function ghPutFile(token, owner, repo, path, contentBase64, message) {
+    return ghFetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path, token, {
+      method: 'PUT',
+      body: JSON.stringify({ message: message || ('add ' + path), content: contentBase64, branch: 'main' }),
+    });
+  }
+  function collectAndroidProjectFiles(app) {
+    var pkg = 'com.HSAO.' + slugPackage(app.name);
+    var pkgPath = pkg.split('.').join('/');
+    var hasIcon = !!app.cover;
+    var themeColor = app.themeColor || '#121317';
+    var files = [];
+    files.push({ path: 'app/src/main/AndroidManifest.xml', content: buildAndroidManifest(pkg, hasIcon, !!app.notifications), binary: false });
+    files.push({ path: 'app/src/main/java/' + pkgPath + '/MainActivity.java', content: buildMainActivityJava(pkg, app.fullscreen !== false), binary: false });
+    files.push({ path: 'app/src/main/res/values/strings.xml', content: '<resources>\n    <string name="app_name">' + escapeHtml(app.name) + '</string>\n</resources>\n', binary: false });
+    files.push({ path: 'app/src/main/res/values/styles.xml', content: buildStylesXml(themeColor), binary: false });
+    if (hasIcon) {
+      var iconB64 = dataUrlToBase64(app.cover);
+      ['mipmap-hdpi', 'mipmap-xhdpi', 'mipmap-xxhdpi', 'mipmap-xxxhdpi'].forEach(function (folder) {
+        files.push({ path: 'app/src/main/res/' + folder + '/ic_launcher.png', content: iconB64, binary: true });
+      });
+    }
+    files.push({ path: 'app/src/main/assets/index.html', content: app.html || '', binary: false });
+    (app.assets || []).forEach(function (a) {
+      files.push({ path: 'app/src/main/assets/' + a.name, content: a.isBinary ? dataUrlToBase64(a.content) : a.content, binary: !!a.isBinary });
+    });
+    files.push({ path: 'app/build.gradle', content: buildAppGradle(pkg), binary: false });
+    files.push({ path: 'build.gradle', content: "plugins {\n    id 'com.android.application' version '8.5.2' apply false\n}\n", binary: false });
+    files.push({ path: 'settings.gradle', content: buildSettingsGradle(app.name), binary: false });
+    files.push({ path: 'gradle.properties', content: 'android.useAndroidX=true\n', binary: false });
+    files.push({ path: '.github/workflows/build-apk.yml', content: buildGithubWorkflow(), binary: false });
+    files.push({ path: 'LEIA-ME-ANDROID.txt', content: buildAndroidReadme(app.name), binary: false });
+    return files;
+  }
+  function pollWorkflowRun(token, owner, repo, attempt) {
+    attempt = attempt || 0;
+    return ghFetch('https://api.github.com/repos/' + owner + '/' + repo + '/actions/runs?per_page=1', token)
+      .then(function (data) {
+        var run = data.workflow_runs && data.workflow_runs[0];
+        if (!run) {
+          if (attempt > 20) throw new Error('Nao encontrei nenhuma execucao do GitHub Actions a arrancar.');
+          return wait(3000).then(function () { return pollWorkflowRun(token, owner, repo, attempt + 1); });
+        }
+        if (run.status !== 'completed') {
+          appendLog('A compilar... (' + run.status + ')');
+          if (attempt > 60) throw new Error('O build esta a demorar demasiado. Ve o progresso em github.com/' + owner + '/' + repo + '/actions');
+          return wait(6000).then(function () { return pollWorkflowRun(token, owner, repo, attempt + 1); });
+        }
+        return run;
+      });
+  }
+  function getArtifactApk(token, owner, repo, runId) {
+    return ghFetch('https://api.github.com/repos/' + owner + '/' + repo + '/actions/runs/' + runId + '/artifacts', token)
+      .then(function (data) {
+        var artifact = (data.artifacts || [])[0];
+        if (!artifact) throw new Error('O build terminou mas nao encontrei nenhum ficheiro gerado (artefacto).');
+        return fetch('https://api.github.com/repos/' + owner + '/' + repo + '/actions/artifacts/' + artifact.id + '/zip', {
+          headers: ghHeaders(token),
+        });
+      })
+      .then(function (res) {
+        if (!res.ok) throw new Error('Falha ao descarregar o ficheiro gerado (' + res.status + ')');
+        return res.blob();
+      })
+      .then(function (zipBlob) { return loadJSZip().then(function (JSZip) { return JSZip.loadAsync(zipBlob); }); })
+      .then(function (zip) {
+        var apkPath = Object.keys(zip.files).filter(function (p) { return /\.apk$/i.test(p); })[0];
+        if (!apkPath) throw new Error('Nao encontrei um .apk dentro do ficheiro gerado.');
+        return zip.files[apkPath].async('blob');
+      });
+  }
+  function appendLog(msg) {
+    state.buildLog = (state.buildLog || []).concat([msg]);
+    render();
+  }
+  function runGithubBuild(app) {
+    state.view = 'building';
+    state.buildStatus = 'running';
+    state.buildLog = [];
+    state.buildError = '';
+    state.repoUrl = '';
+    render();
+
+    var token = state.githubToken;
+    var files = collectAndroidProjectFiles(app);
+    var baseName = slugPackage(app.name) || 'app';
+    var candidateName = baseName + '-' + Date.now().toString(36);
+    var owner, repoName;
+
+    appendLog('A criar repositorio no GitHub...');
+    ghCreateRepo(token, candidateName)
+      .then(function (repo) {
+        owner = repo.owner.login;
+        repoName = repo.name;
+        appendLog('Repositorio criado: ' + repo.full_name);
+        return wait(1500);
+      })
+      .then(function () {
+        appendLog('A enviar ' + files.length + ' ficheiros...');
+        var chain = Promise.resolve();
+        files.forEach(function (f, idx) {
+          chain = chain.then(function () {
+            var contentB64 = f.binary ? f.content : utf8ToBase64(f.content);
+            return ghPutFile(token, owner, repoName, f.path, contentB64, 'add ' + f.path).then(function () {
+              appendLog('(' + (idx + 1) + '/' + files.length + ') ' + f.path);
+            });
+          });
+        });
+        return chain;
+      })
+      .then(function () {
+        appendLog('A aguardar o GitHub Actions arrancar (pode demorar 1 a 3 minutos)...');
+        return wait(5000);
+      })
+      .then(function () { return pollWorkflowRun(token, owner, repoName); })
+      .then(function (run) {
+        if (run.conclusion !== 'success') {
+          throw new Error('O build falhou no GitHub Actions (' + run.conclusion + '). Ve o log em github.com/' + owner + '/' + repoName + '/actions');
+        }
+        appendLog('Build concluido com sucesso.');
+        return getArtifactApk(token, owner, repoName, run.id);
+      })
+      .then(function (apkBlob) {
+        appendLog('A descarregar o .apk...');
+        var url = URL.createObjectURL(apkBlob);
+        var a = document.createElement('a');
+        a.href = url; a.download = (app.name || 'app').replace(/[^a-z0-9\-_]+/gi, '-') + '.apk';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        state.buildStatus = 'success';
+        state.repoUrl = 'https://github.com/' + owner + '/' + repoName;
+        render();
+      })
+      .catch(function (err) {
+        state.buildStatus = 'error';
+        state.buildError = (err && err.message) ? err.message : 'Falha desconhecida.';
+        appendLog('Erro: ' + state.buildError);
+        render();
+      });
+  }
+
+  function dataUrlToBase64(dataUrl) {
+    var i = dataUrl.indexOf(',');
+    return i >= 0 ? dataUrl.slice(i + 1) : dataUrl;
+  }
+
+  // ---------- Android Studio project generator (fonte real, para compilar o .apk) ----------
+  function slugPackage(name) {
+    var s = (name || 'app').toLowerCase();
+    if (s.normalize) s = s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    s = s.replace(/[^a-z0-9]+/g, '');
+    if (!s) s = 'app';
+    if (/^[0-9]/.test(s)) s = 'a' + s;
+    return s;
+  }
+  function buildMainActivityJava(pkg, fullscreen) {
+    var fs = fullscreen
+      ? '        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);\n' +
+        '        getWindow().getDecorView().setSystemUiVisibility(\n' +
+        '            View.SYSTEM_UI_FLAG_HIDE_NAVIGATION | View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);\n\n'
+      : '';
+    return 'package ' + pkg + ';\n\n' +
+      'import android.annotation.SuppressLint;\n' +
+      'import android.os.Bundle;\n' +
+      'import android.view.View;\n' +
+      'import android.view.WindowManager;\n' +
+      'import android.webkit.WebSettings;\n' +
+      'import android.webkit.WebView;\n' +
+      'import androidx.appcompat.app.AppCompatActivity;\n\n' +
+      'public class MainActivity extends AppCompatActivity {\n' +
+      '    private WebView webView;\n\n' +
+      '    @SuppressLint("SetJavaScriptEnabled")\n' +
+      '    @Override\n' +
+      '    protected void onCreate(Bundle savedInstanceState) {\n' +
+      '        super.onCreate(savedInstanceState);\n\n' +
+      fs +
+      '        webView = new WebView(this);\n' +
+      '        setContentView(webView);\n\n' +
+      '        WebSettings settings = webView.getSettings();\n' +
+      '        settings.setJavaScriptEnabled(true);\n' +
+      '        settings.setDomStorageEnabled(true);\n' +
+      '        settings.setAllowFileAccess(true);\n' +
+      '        settings.setLoadWithOverviewMode(true);\n' +
+      '        settings.setUseWideViewPort(true);\n\n' +
+      '        // O teu index.html (e os ficheiros extra) vivem em app/src/main/assets\n' +
+      '        webView.loadUrl("file:///android_asset/index.html");\n' +
+      '    }\n\n' +
+      '    @Override\n' +
+      '    public void onBackPressed() {\n' +
+      '        if (webView.canGoBack()) {\n' +
+      '            webView.goBack();\n' +
+      '        } else {\n' +
+      '            super.onBackPressed();\n' +
+      '        }\n' +
+      '    }\n' +
+      '}\n';
+  }
+  function buildAndroidManifest(pkg, hasIcon, notifications) {
+    return '<?xml version="1.0" encoding="utf-8"?>\n' +
+      '<manifest xmlns:android="http://schemas.android.com/apk/res/android">\n\n' +
+      '    <uses-permission android:name="android.permission.INTERNET" />\n' +
+      (notifications ? '    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n' : '') +
+      '    <!-- Precisas de camera, microfone, etc? Adiciona aqui, ex.:\n' +
+      '         <uses-permission android:name="android.permission.CAMERA" /> -->\n\n' +
+      '    <application\n' +
+      '        android:allowBackup="true"\n' +
+      (hasIcon ? '        android:icon="@mipmap/ic_launcher"\n' : '') +
+      '        android:label="@string/app_name"\n' +
+      '        android:theme="@style/AppTheme">\n' +
+      '        <activity\n' +
+      '            android:name=".MainActivity"\n' +
+      '            android:exported="true"\n' +
+      '            android:screenOrientation="unspecified">\n' +
+      '            <intent-filter>\n' +
+      '                <action android:name="android.intent.action.MAIN" />\n' +
+      '                <category android:name="android.intent.category.LAUNCHER" />\n' +
+      '            </intent-filter>\n' +
+      '        </activity>\n' +
+      '    </application>\n' +
+      '</manifest>\n';
+  }
+  function buildStylesXml(themeColor) {
+    return '<resources>\n' +
+      '    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">\n' +
+      '        <item name="android:statusBarColor">' + themeColor + '</item>\n' +
+      '        <item name="colorPrimary">' + themeColor + '</item>\n' +
+      '        <item name="colorPrimaryDark">' + themeColor + '</item>\n' +
+      '    </style>\n' +
+      '</resources>\n';
+  }
+  function buildAppGradle(pkg) {
+    return "plugins {\n    id 'com.android.application'\n}\n\n" +
+      "android {\n" +
+      "    namespace '" + pkg + "'\n" +
+      "    compileSdk 34\n\n" +
+      "    defaultConfig {\n" +
+      "        applicationId \"" + pkg + "\"\n" +
+      "        minSdk 21\n" +
+      "        targetSdk 34\n" +
+      "        versionCode 1\n" +
+      "        versionName \"1.0\"\n" +
+      "    }\n\n" +
+      "    buildTypes {\n        release {\n            minifyEnabled false\n        }\n    }\n" +
+      "    compileOptions {\n        sourceCompatibility JavaVersion.VERSION_1_8\n        targetCompatibility JavaVersion.VERSION_1_8\n    }\n" +
+      "}\n\n" +
+      "dependencies {\n    implementation 'androidx.appcompat:appcompat:1.7.0'\n}\n";
+  }
+  function buildSettingsGradle(appName) {
+    var safeName = (appName || 'App').replace(/["\\]/g, '');
+    return "pluginManagement {\n    repositories {\n        google()\n        mavenCentral()\n        gradlePluginPortal()\n    }\n}\n" +
+      "dependencyResolutionManagement {\n    repositories {\n        google()\n        mavenCentral()\n    }\n}\n" +
+      "rootProject.name = \"" + safeName + "\"\n" +
+      "include ':app'\n";
+  }
+  function buildGithubWorkflow() {
+    return "name: Build APK\n\n" +
+      "on:\n  push:\n    branches: [ main ]\n  workflow_dispatch:\n\n" +
+      "jobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n" +
+      "      - uses: actions/checkout@v4\n" +
+      "      - uses: actions/setup-java@v4\n        with:\n          distribution: 'temurin'\n          java-version: '17'\n" +
+      "      - uses: gradle/actions/setup-gradle@v4\n        with:\n          gradle-version: 8.7\n" +
+      "      - name: Build debug APK\n        run: gradle assembleDebug\n" +
+      "      - name: Upload APK\n        uses: actions/upload-artifact@v4\n        with:\n          name: app-debug-apk\n          path: app/build/outputs/apk/debug/app-debug.apk\n";
+  }
+  function buildAndroidReadme(appName) {
+    return appName + ' \u2014 projeto Android (fonte)\n=====================================\n\n' +
+      'O que e isto:\n' +
+      '  Um projeto real do Android Studio com um WebView que abre o teu\n' +
+      '  index.html em ecra inteiro, sem barras de navegador. NAO e um\n' +
+      '  .apk pronto \u2014 e o codigo-fonte que se compila num.\n\n' +
+      'Como compilar (escolhe uma):\n\n' +
+      '  1) No teu computador, com Android Studio:\n' +
+      '     - Abre esta pasta como projeto (File > Open).\n' +
+      '     - Deixa o Android Studio sincronizar o Gradle (pode sugerir\n' +
+      '       atualizar versoes na primeira vez \u2014 aceita, e normal).\n' +
+      '     - Build > Build Bundle(s) / APK(s) > Build APK(s).\n' +
+      '     - O .apk fica em app/build/outputs/apk/debug/.\n\n' +
+      '  2) Sem instalar nada, via GitHub Actions (gratuito):\n' +
+      '     - Cria um repositorio novo no GitHub e envia esta pasta.\n' +
+      '     - O ficheiro .github/workflows/build-apk.yml ja esta pronto:\n' +
+      '       ao fazeres push, o GitHub compila sozinho e deixa o .apk\n' +
+      '       pronto para descarregar em Actions > (a tua run) > Artifacts.\n\n' +
+      'Sobre a Play Store:\n' +
+      '  Para publicar precisas de assinar o app com uma chave de release\n' +
+      '  e de uma conta de developer (paga, unica vez). O .apk de debug\n' +
+      '  serve para testares no teu telemovel antes disso.\n\n' +
+      'Sobre iPhone (.ipa):\n' +
+      '  Isso precisa de um Mac com Xcode e conta Apple Developer (paga)\n' +
+      '  \u2014 nao da para gerar a partir so deste projeto Android. Se\n' +
+      '  quiseres, depois posso preparar um projeto Capacitor que serve\n' +
+      '  para Android e iPhone a partir do mesmo index.html.\n\n' +
+      'Limitacoes:\n' +
+      '  - Camera, microfone, etc.: adiciona a permissao no\n' +
+      '    AndroidManifest.xml e trata do pedido no WebView\n' +
+      '    (setWebChromeClient) se o teu site precisar.\n' +
+      '  - Jogos muito pesados podem correr mais lentos dentro de um\n' +
+      '    WebView do que numa engine nativa.\n';
+  }
+  function generateAndroidProject(app) {
+    state.busy = true; state.error = ''; render();
+    var pkg = 'com.appbuilder.' + slugPackage(app.name);
+    var pkgParts = pkg.split('.');
+    var hasIcon = !!app.cover;
+    var themeColor = app.themeColor || '#121317';
+
+    loadJSZip().then(function (JSZip) {
+      var zip = new JSZip();
+      var appDir = zip.folder('app');
+      var mainDir = appDir.folder('src').folder('main');
+
+      mainDir.file('AndroidManifest.xml', buildAndroidManifest(pkg, hasIcon, !!app.notifications));
+
+      var javaDir = pkgParts.reduce(function (dir, part) { return dir.folder(part); }, mainDir.folder('java'));
+      javaDir.file('MainActivity.java', buildMainActivityJava(pkg, app.fullscreen !== false));
+
+      var resValues = mainDir.folder('res').folder('values');
+      resValues.file('strings.xml', '<resources>\n    <string name="app_name">' + escapeHtml(app.name) + '</string>\n</resources>\n');
+      resValues.file('styles.xml', buildStylesXml(themeColor));
+
+      if (hasIcon) {
+        var iconB64 = dataUrlToBase64(app.cover);
+        ['mipmap-hdpi', 'mipmap-xhdpi', 'mipmap-xxhdpi', 'mipmap-xxxhdpi'].forEach(function (folder) {
+          mainDir.folder('res').folder(folder).file('ic_launcher.png', iconB64, { base64: true });
+        });
+      }
+
+      var assetsDir = mainDir.folder('assets');
+      assetsDir.file('index.html', app.html || '');
+      (app.assets || []).forEach(function (a) {
+        if (a.isBinary) assetsDir.file(a.name, dataUrlToBase64(a.content), { base64: true });
+        else assetsDir.file(a.name, a.content);
+      });
+
+      appDir.file('build.gradle', buildAppGradle(pkg));
+      zip.file('build.gradle', "plugins {\n    id 'com.android.application' version '8.5.2' apply false\n}\n");
+      zip.file('settings.gradle', buildSettingsGradle(app.name));
+      zip.file('gradle.properties', 'android.useAndroidX=true\n');
+      zip.folder('.github').folder('workflows').file('build-apk.yml', buildGithubWorkflow());
+      zip.file('LEIA-ME-ANDROID.txt', buildAndroidReadme(app.name));
+
+      return zip.generateAsync({ type: 'blob' });
+    }).then(function (blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = (app.name || 'app').replace(/[^a-z0-9\-_]+/gi, '-') + '-android-projeto.zip';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      state.busy = false;
+      render();
+      showToast('Projeto Android exportado.');
+    }).catch(function () {
+      state.busy = false;
+      state.error = 'Sem ligacao para gerar o projeto (precisa de internet para carregar o empacotador).';
+      render();
+    });
+  }
+
+  function handleExportZip(app) {
+    state.busy = true; state.error = ''; render();
+    var opts = { themeColor: app.themeColor || '#121317', offline: app.offline !== false };
+    var assets = app.assets || [];
+    var assetNames = assets.map(function (a) { return a.name; });
+
+    loadJSZip().then(function (JSZip) {
+      var zip = new JSZip();
+      var html = buildExportHtml(app.html, app.name, opts);
+      zip.file('index.html', html);
+      var manifest = {
+        name: app.name, short_name: app.name.slice(0, 12), start_url: './index.html',
+        display: app.fullscreen !== false ? 'fullscreen' : 'standalone',
+        background_color: opts.themeColor, theme_color: opts.themeColor,
+        icons: app.cover ? [{ src: 'icon.png', sizes: '512x512', type: 'image/png' }] : [],
+      };
+      zip.file('manifest.json', JSON.stringify(manifest, null, 2));
+      if (app.cover) zip.file('icon.png', dataUrlToBase64(app.cover), { base64: true });
+      assets.forEach(function (a) {
+        if (a.isBinary) zip.file(a.name, dataUrlToBase64(a.content), { base64: true });
+        else zip.file(a.name, a.content);
+      });
+      if (opts.offline) zip.file('sw.js', generateServiceWorker(assetNames));
+      zip.file('LEIA-ME.txt', readmeTextZip(app, opts));
+      return zip.generateAsync({ type: 'blob' });
+    }).then(function (blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = (app.name || 'app').replace(/[^a-z0-9\-_]+/gi, '-') + '.zip';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      state.busy = false;
+      render();
+      showToast('Pacote .zip exportado.');
+    }).catch(function () {
+      // sem internet para carregar o empacotador de zip (ou outra falha) — usa o modo antigo por ficheiros separados
+      handleExport(app);
+      showToast('Sem ligacao para gerar .zip — exportei os ficheiros separados.');
+    });
+  }
+
+  function buildPreviewHtml(app) {
+    var html = app.html || '';
+    (app.assets || []).forEach(function (asset) {
+      var url;
+      if (asset.isBinary) {
+        url = asset.content;
+      } else {
+        var mime = /\.css$/i.test(asset.name) ? 'text/css' : (/\.js$/i.test(asset.name) ? 'application/javascript' : 'text/plain');
+        url = 'data:' + mime + ';charset=utf-8,' + encodeURIComponent(asset.content);
+      }
+      var escapedName = asset.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      var re = new RegExp('(["\'])(?:[^"\']*\\/)?' + escapedName + '\\1', 'g');
+      html = html.replace(re, '$1' + url + '$1');
+    });
+    return html;
+  }
+
+  // ---------- render ----------
+  var root = document.getElementById('app');
+
+  function render() {
+    try {
+      var html = '';
+      html += renderTopbar();
+      html += '<div class="container">';
+      if (state.view === 'home') html += renderHome();
+      if (state.view === 'form') html += renderForm();
+      if (state.view === 'preview') html += renderPreview();
+      if (state.view === 'building') html += renderBuilding();
+      if (state.view === 'github-setup') html += renderGithubSetup();
+      html += '</div>';
+      if (state.toast) {
+        html += '<div class="toast">' + icon('check') + ' ' + escapeHtml(state.toast) + '</div>';
+      }
+      root.innerHTML = html;
+      bindEvents();
+    } catch (err) {
+      root.innerHTML = '<div class="container"><div class="error-line" style="margin-top:24px">' +
+        icon('alert') + ' Ocorreu um erro a desenhar o ecra: ' + escapeHtml(err && err.message ? err.message : String(err)) + '</div></div>';
+    }
+  }
+
+  function renderTopbar() {
+    var titleText = 'app-HSAO';
+    if (state.view === 'form') titleText = state.editingId ? 'editar-projeto' : 'novo-projeto';
+    if (state.view === 'preview') titleText = state.active ? state.active.name : 'pre-visualizacao';
+    if (state.view === 'building') titleText = 'a-compilar';
+    if (state.view === 'github-setup') titleText = 'ligar-github';
+    var left = state.view !== 'home'
+      ? '<button class="icon-btn" data-action="go-home">' + icon('arrowLeft', 'width="20" height="20"') + '</button>'
+      : '<div class="dots"><span class="dot" style="background:#e5686c"></span><span class="dot" style="background:#ffb454"></span><span class="dot" style="background:#5ec9c0"></span></div>';
+    var right = state.view === 'home'
+      ? '<button class="btn btn-solid" data-action="new">' + icon('plus') + ' Novo</button>'
+      : '';
+    return '<div class="topbar"><div class="topbar-inner">' +
+      '<div class="topbar-left">' + left + '<div class="title mono">' + escapeHtml(titleText) + '</div></div>' +
+      right + '</div></div>';
+  }
+
+  function renderHome() {
+    if (state.loadingIndex) {
+      return '<div class="spinner-wrap"><div class="spinner"></div></div>';
+    }
+    if (state.index.length === 0) {
+      return '<div class="empty">' + icon('folder', 'width="28" height="28"') +
+        '<div style="font-size:15px;margin-bottom:4px;">Ainda nao tens nenhum app aqui.</div>' +
+        '<div style="font-size:13px;color:var(--muted);margin-bottom:20px;">Cria um projeto: da-lhe um nome, escolhe a foto de capa e carrega o teu index.html.</div>' +
+        '<button class="btn btn-solid" data-action="new">' + icon('plus') + ' Criar o primeiro app</button></div>';
+    }
+    var count = state.index.length;
+    var label = count === 1 ? 'projeto guardado' : 'projetos guardados';
+    var cards = state.index.map(function (app) {
+      var coverStyle = app.cover ? 'background-image:url(' + app.cover + ')' : '';
+      var coverInner = app.cover ? '' : icon('image');
+      var isConfirming = state.confirmDeleteId === app.id;
+      var actions = isConfirming
+        ? '<div class="confirm-inline">' +
+            '<button data-action="delete" data-id="' + app.id + '" style="color:var(--danger)">sim</button>' +
+            '<button data-action="cancel-delete" style="color:var(--faint)">nao</button></div>'
+        : '<button class="icon-btn" data-action="delete-confirm" data-id="' + app.id + '">' + icon('trash', 'width="14" height="14"') + '</button>';
+      return '<div class="card">' +
+        '<div class="card-cover" style="' + coverStyle + '" data-action="open" data-id="' + app.id + '">' + coverInner + '</div>' +
+        '<div class="card-body"><div class="card-name">' + escapeHtml(app.name) + '</div>' +
+        '<div class="card-actions">' +
+        '<button class="icon-btn" data-action="edit" data-id="' + app.id + '">' + icon('pencil', 'width="14" height="14"') + '</button>' +
+        actions +
+        '</div></div></div>';
+    }).join('');
+    return '<div class="eyebrow">' + count + ' ' + label + '</div><div class="grid">' + cards + '</div>';
+  }
+
+  function renderForm() {
+    var a = state.active;
+    var coverStyle = a.cover ? 'background-image:url(' + a.cover + ')' : '';
+    var coverInner = a.cover ? '' : icon('image', 'width="20" height="20"');
+    var dzClass = a.html ? 'dropzone has-file' : 'dropzone';
+    var dzText = a.fileName ? escapeHtml(a.fileName) : 'Toca para selecionar o ficheiro .html';
+    var dzSize = a.html ? '<div class="dz-size">' + bytesLabel(a.html) + '</div>' : '';
+    var errorLine = state.error ? '<div class="error-line">' + icon('alert') + ' ' + escapeHtml(state.error) + '</div>' : '';
+    var dropzone = '<div class="' + dzClass + '" data-action="pick-html">' +
+        icon('folder', 'width="22" height="22"') +
+        '<div style="flex:1;min-width:0;"><div class="dz-name">' + dzText + '</div>' + dzSize + '</div>' +
+        '<input id="html-file" type="file" accept=".html,.htm" style="display:none">' +
+      '</div>';
+    var assets = a.assets || [];
+    var assetChips = assets.map(function (asset) {
+      return '<div class="asset-chip">' + escapeHtml(asset.name) +
+        '<button class="chip-remove" data-action="remove-asset" data-name="' + escapeHtml(asset.name) + '">' + icon('x', 'width="12" height="12"') + '</button></div>';
+    }).join('');
+    var assetSection = '<div class="field">' +
+        '<label class="field-label">Ficheiros extra (css, js, imagens)</label>' +
+        '<button class="btn btn-outline" data-action="pick-asset">' + icon('upload') + ' Adicionar ficheiros</button>' +
+        '<input id="asset-file" type="file" multiple accept=".css,.js,.png,.jpg,.jpeg,.gif,.svg,.webp,.json,.ico" style="display:none">' +
+        (assetChips ? '<div class="asset-list">' + assetChips + '</div>' : '') +
+      '</div>';
+    var settingsSection = '<div class="field">' +
+        '<label class="field-label">Configuracoes</label>' +
+        '<div class="color-row" style="margin-bottom:4px;">' +
+          '<input id="color-input" class="color-input" type="color" value="' + (a.themeColor || '#121317') + '">' +
+          '<div><div style="font-size:14px;">Cor da barra</div><div class="toggle-sub">Usada na barra de status e no icone da app</div></div>' +
+        '</div>' +
+        '<div class="toggle-row">' +
+          '<div><div class="toggle-label">Tela cheia</div><div class="toggle-sub">Esconde barras do navegador ao abrir</div></div>' +
+          '<label class="switch"><input id="fullscreen-toggle" type="checkbox" ' + (a.fullscreen !== false ? 'checked' : '') + '><span class="switch-track"></span><span class="switch-thumb"></span></label>' +
+        '</div>' +
+        '<div class="toggle-row">' +
+          '<div><div class="toggle-label">Modo offline</div><div class="toggle-sub">Guarda os ficheiros em cache para abrir sem internet</div></div>' +
+          '<label class="switch"><input id="offline-toggle" type="checkbox" ' + (a.offline !== false ? 'checked' : '') + '><span class="switch-track"></span><span class="switch-thumb"></span></label>' +
+        '</div>' +
+        '<div class="toggle-row">' +
+          '<div><div class="toggle-label">Notificacoes</div><div class="toggle-sub">Declara a permissao no projeto Android para poderes usar push depois</div></div>' +
+          '<label class="switch"><input id="notifications-toggle" type="checkbox" ' + (a.notifications === true ? 'checked' : '') + '><span class="switch-track"></span><span class="switch-thumb"></span></label>' +
+        '</div>' +
+      '</div>';
+    var infoNote = '<div class="info-note"><b>Sobre o que isto gera:</b> um pacote web completo (index.html + css/js/imagens + manifest + icone + cache offline). ' +
+      'Isto NAO compila um .apk/.ipa aqui dentro. Depois de criar o app, no ecra de pre-visualizacao tens duas saidas: ' +
+      '"Exportar .zip" (pacote PWA para servicos como o PWABuilder.com) ou "Gerar projeto Android" ' +
+      '(codigo-fonte real de Android Studio, com WebView e workflow do GitHub Actions para compilar o .apk automaticamente).</div>';
+    return '<div class="eyebrow">' + (state.editingId ? 'editar' : 'passo 1 de 1') + '</div>' +
+      '<div class="field">' +
+        '<label class="field-label">Nome do app</label>' +
+        '<input id="name-input" class="text-input" placeholder="Ex.: HSAO" value="' + escapeHtml(a.name) + '">' +
+      '</div>' +
+      '<div class="field">' +
+        '<label class="field-label">Foto de capa (icone)</label>' +
+        '<div class="cover-row">' +
+          '<div class="cover-preview" style="' + coverStyle + '" data-action="pick-cover">' + coverInner + '</div>' +
+          '<div><button class="btn btn-outline" data-action="pick-cover">' + icon('upload') + ' Escolher na galeria</button>' +
+          '<div class="cover-hint">PNG ou JPG. Vai ser ajustada para 512x512.</div></div>' +
+          '<input id="cover-file" type="file" accept="image/*" style="display:none">' +
+        '</div>' +
+      '</div>' +
+      '<div class="field">' +
+        '<label class="field-label">Ficheiro index.html</label>' +
+        dropzone +
+      '</div>' +
+      assetSection +
+      settingsSection +
+      infoNote +
+      errorLine +
+      '<div class="field">' +
+        '<button class="btn btn-solid" data-action="save" style="width:100%;padding:13px 16px" ' + (state.busy ? 'disabled' : '') + '>' +
+          (state.busy ? 'A guardar...' : (state.editingId ? 'Guardar alteracoes' : 'Criar app')) +
+        '</button>' +
+      '</div>';
+  }
+
+  function renderPreview() {
+    var app = state.active;
+    var isConfirming = state.confirmDeleteId === app.id;
+    var deleteBtn = isConfirming
+      ? '<button class="btn btn-danger" data-action="delete" data-id="' + app.id + '">Confirmar apagar</button>' +
+        '<button class="btn btn-ghost" data-action="cancel-delete">Cancelar</button>'
+      : '<button class="btn btn-ghost" data-action="delete-confirm" data-id="' + app.id + '">' + icon('trash') + ' Apagar</button>';
+    return '<div class="actions-row">' +
+        '<button class="btn btn-outline" data-action="edit" data-id="' + app.id + '">' + icon('pencil') + ' Editar</button>' +
+        '<button class="btn btn-outline" data-action="export" ' + (state.busy ? 'disabled' : '') + '>' + icon('download') + ' ' + (state.busy ? 'A preparar...' : 'Exportar .zip') + '</button>' +
+        '<button class="btn btn-outline" data-action="gen-android" ' + (state.busy ? 'disabled' : '') + '>' + icon('smartphone') + ' ' + (state.busy ? 'A gerar...' : 'Gerar projeto Android') + '</button>' +
+        '<button class="btn btn-solid" data-action="auto-build">' + icon('download') + ' Baixar app (auto)</button>' +
+        deleteBtn +
+      '</div>' +
+      '<div class="phone"><div class="phone-notch"></div>' +
+        '<iframe title="' + escapeHtml(app.name) + '" sandbox="allow-scripts allow-same-origin allow-forms allow-modals allow-popups"></iframe>' +
+      '</div>' +
+      '<div class="phone-caption">' + icon('smartphone') + ' pre-visualizacao \u2014 ' + escapeHtml(app.fileName || 'index.html') + '</div>';
+  }
+
+  function renderGithubSetup() {
+    var errorLine = state.error ? '<div class="error-line">' + icon('alert') + ' ' + escapeHtml(state.error) + '</div>' : '';
+    return '<div class="eyebrow">passo unico</div>' +
+      '<div class="info-note" style="margin-top:12px;">' +
+        'Precisas de um token de acesso pessoal do GitHub (gratuito), com as opcoes <b>repo</b> e <b>workflow</b> marcadas. ' +
+        'Cria um em <a href="https://github.com/settings/tokens/new" target="_blank" style="color:var(--teal);">github.com/settings/tokens/new</a>, ' +
+        'copia o valor e cola abaixo. So precisas de fazer isto uma vez \u2014 fica guardado neste dispositivo.' +
+      '</div>' +
+      '<div class="field">' +
+        '<label class="field-label">Token de acesso pessoal do GitHub</label>' +
+        '<input id="gh-token-input" type="password" class="text-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" value="' + escapeHtml(state.githubToken || '') + '">' +
+      '</div>' +
+      errorLine +
+      '<div class="field">' +
+        '<button class="btn btn-solid" data-action="gh-save-token" style="width:100%;padding:13px 16px;">Guardar e gerar o app</button>' +
+      '</div>';
+  }
+
+  function renderBuilding() {
+    var lines = (state.buildLog || []).map(function (l) {
+      return '<div class="log-line">' + escapeHtml(l) + '</div>';
+    }).join('');
+    var statusBlock = '';
+    if (state.buildStatus === 'running') {
+      statusBlock = '<div class="spinner-wrap" style="padding:20px 0;"><div class="spinner"></div></div>';
+    } else if (state.buildStatus === 'success') {
+      statusBlock = '<div class="error-line" style="color:var(--teal);margin-top:10px;">' + icon('check') + ' Pronto! O .apk foi descarregado.</div>' +
+        (state.repoUrl ? '<div class="cover-hint" style="margin-top:6px;">Repositorio: <a href="' + state.repoUrl + '" target="_blank" style="color:var(--teal);">' + state.repoUrl + '</a></div>' : '') +
+        '<div class="field"><button class="btn btn-outline" data-action="go-home">Voltar ao inicio</button></div>';
+    } else if (state.buildStatus === 'error') {
+      statusBlock = '<div class="error-line">' + icon('alert') + ' ' + escapeHtml(state.buildError || 'Falha desconhecida.') + '</div>' +
+        '<div class="field"><button class="btn btn-outline" data-action="go-home">Voltar ao inicio</button></div>';
+    }
+    return '<div class="eyebrow">a compilar o teu app no github</div>' +
+      '<div class="mono" style="font-size:12px;line-height:1.8;margin-top:10px;max-height:280px;overflow-y:auto;">' + lines + '</div>' +
+      statusBlock;
+  }
+
+  // ---------- events ----------
+  function bindEvents() {
+    // name input: update state silently, no re-render (keeps focus/cursor)
+    var nameInput = document.getElementById('name-input');
+    if (nameInput) {
+      nameInput.addEventListener('input', function (e) {
+        state.active.name = e.target.value;
+      });
+    }
+    var coverFile = document.getElementById('cover-file');
+    if (coverFile) coverFile.addEventListener('change', function (e) { handleCoverPick(e.target.files[0]); });
+    var htmlFile = document.getElementById('html-file');
+    if (htmlFile) htmlFile.addEventListener('change', function (e) { handleHtmlPick(e.target.files[0]); });
+    var assetFile = document.getElementById('asset-file');
+    if (assetFile) assetFile.addEventListener('change', function (e) { handleAssetPick(e.target.files); assetFile.value = ''; });
+    var colorInput = document.getElementById('color-input');
+    if (colorInput) colorInput.addEventListener('input', function (e) { state.active.themeColor = e.target.value; });
+    var fullscreenToggle = document.getElementById('fullscreen-toggle');
+    if (fullscreenToggle) fullscreenToggle.addEventListener('change', function (e) { state.active.fullscreen = e.target.checked; });
+    var offlineToggle = document.getElementById('offline-toggle');
+    if (offlineToggle) offlineToggle.addEventListener('change', function (e) { state.active.offline = e.target.checked; });
+    var notificationsToggle = document.getElementById('notifications-toggle');
+    if (notificationsToggle) notificationsToggle.addEventListener('change', function (e) { state.active.notifications = e.target.checked; });
+
+    // preview iframe: set via srcdoc after render (avoids huge attribute escaping issues)
+    var iframe = root.querySelector('.phone iframe');
+    if (iframe && state.active && state.view === 'preview') {
+      iframe.srcdoc = buildPreviewHtml(state.active);
+    }
+
+    root.querySelectorAll('[data-action]').forEach(function (el) {
+      el.addEventListener('click', function () {
+        var action = el.getAttribute('data-action');
+        var id = el.getAttribute('data-id');
+        if (action === 'go-home') { state.view = 'home'; state.error=''; render(); }
+        else if (action === 'new') openNew();
+        else if (action === 'open') openPreview(id);
+        else if (action === 'edit') openEdit(id);
+        else if (action === 'delete-confirm') { state.confirmDeleteId = id; render(); }
+        else if (action === 'cancel-delete') { state.confirmDeleteId = null; render(); }
+        else if (action === 'delete') handleDelete(id);
+        else if (action === 'pick-cover') coverFile && coverFile.click();
+        else if (action === 'pick-html') htmlFile && htmlFile.click();
+        else if (action === 'pick-asset') assetFile && assetFile.click();
+        else if (action === 'remove-asset') removeAsset(el.getAttribute('data-name'));
+        else if (action === 'save') handleSave();
+        else if (action === 'export') handleExportZip(state.active);
+        else if (action === 'gen-android') generateAndroidProject(state.active);
+        else if (action === 'auto-build') {
+          if (state.githubToken) { runGithubBuild(state.active); }
+          else { state.error = ''; state.view = 'github-setup'; render(); }
+        }
+        else if (action === 'gh-save-token') {
+          var tokenInput = document.getElementById('gh-token-input');
+          var tokenVal = (tokenInput ? tokenInput.value : '').trim();
+          if (!tokenVal) { state.error = 'Cola o teu token do GitHub.'; render(); return; }
+          state.error = '';
+          storageSet('github-token', tokenVal).then(function () {
+            state.githubToken = tokenVal;
+            runGithubBuild(state.active);
+          });
+        }
+      });
+    });
+  }
+
+  // ---------- boot ----------
+  storageGet('github-token').then(function (res) { state.githubToken = res ? res.value : ''; });
+  loadIndex().then(function (list) {
+    state.index = list;
+    state.loadingIndex = false;
+    render();
+    if (!hasStorage()) {
+      showToast('Sem armazenamento persistente aqui — os apps ficam so nesta sessao.');
+    }
+  }).catch(function () {
+    state.index = [];
+    state.loadingIndex = false;
+    render();
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+
+</script>
+</body>
+</html>
